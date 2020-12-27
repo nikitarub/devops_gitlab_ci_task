@@ -1,0 +1,37 @@
+variables:
+  GODOT_BIN: godot.linuxbsd.opt.tools.64
+  DEBIAN_FRONT_CFG: noninteractive apt-get -y install build-essential scons pkg-config libx11-dev libxcursor-dev libxinerama-dev libgl1-mesa-dev libglu-dev libasound2-dev libpulse-dev libudev-dev libxi-dev libxrandr-dev yasm
+
+image: alpine
+
+stages:
+  - build
+  - test
+  - deploy
+
+godot.build:
+  stage: build
+  script:
+    - apt-get update
+    - DEBIAN_FRONTEND=$DEBIAN_FRONT_CFG
+    - scons -j8 platform=linuxbsd bits=64 target=release_debug tools=yes tests=yes
+  artifacts:
+    paths:
+      - bin/
+
+godot.test:
+  stage: test
+  script:
+    - apt-get update
+    - DEBIAN_FRONTEND=$DEBIAN_FRONT_CFG
+    - ./bin/$GODOT_BIN --test
+
+godot.package:
+  stage: deploy
+  script:
+    - apt-get update
+    - DEBIAN_FRONTEND=noninteractive apt-get -y install zip
+    - zip -j $GODOT_BIN.zip bin/$GODOT_BIN
+  artifacts:
+    paths:
+      - $GODOT_BIN.zip

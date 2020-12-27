@@ -1,0 +1,32 @@
+services:
+  gitlab:
+    image: 'gitlab/gitlab-ee:latest'
+    restart: always
+    hostname: ${GITLAB_HOSTNAME}
+    ports:
+      - '22:22'
+      - '80:80'
+      - '443:443'
+    networks:
+      - 'gitlab_net'
+    volumes:
+      - '$GITLAB_PATH/config:/etc/gitlab'
+      - '$GITLAB_PATH/logs:/var/log/gitlab'
+      - '$GITLAB_PATH/data:/var/opt/gitlab'
+
+  gitlab-runner:
+    image: 'gitlab/gitlab-runner:latest'
+    restart: always
+    depends_on: 
+      - gitlab
+    networks:
+      - 'gitlab_net'
+    volumes:
+      - './gitlab-runner:/etc/gitlab-runner'
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    
+
+networks:
+  gitlab_net:
+    name: 'gitlab-network'
+    driver: 'bridge'
